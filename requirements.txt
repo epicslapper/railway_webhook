@@ -1,0 +1,3 @@
+flask
+mollie-api-python
+supabase
