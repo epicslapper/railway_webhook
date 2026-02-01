@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 
 # ────────────────────────────────────────────────────────────────
-# VERSION / RESTART INDICATOR – change version number every edit 2
+# VERSION / RESTART INDICATOR – change version number every edit 3
 # ────────────────────────────────────────────────────────────────
 VERSION = "2026-02-01 v1.10"  # ← CHANGE THIS EVERY TIME YOU EDIT THE FILE
 print("\n" + "═"*70)
