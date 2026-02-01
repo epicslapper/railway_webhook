@@ -19,16 +19,38 @@ app = Flask(__name__)
 # ────────────────────────────────────────────────────────────────
 # KEYS – prefer Railway env vars, fallback for local dev only
 # ────────────────────────────────────────────────────────────────
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-MOLLIE_KEY = os.getenv("MOLLIE_KEY")
+raw_SUPABASE_URL = os.getenv("SUPABASE_URL")
+raw_SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+raw_MOLLIE_KEY = os.getenv("MOLLIE_KEY")
+
+print(f"RAW SUPABASE_URL env: {raw_SUPABASE_URL!r}", flush=True)
+
+SUPABASE_URL = (raw_SUPABASE_URL or "").strip()
+SUPABASE_KEY = (raw_SUPABASE_KEY or "").strip()
+MOLLIE_KEY = (raw_MOLLIE_KEY or "").strip()
+
+def _validate_supabase_url(url: str) -> str | None:
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        return "must start with https://"
+    if not parsed.netloc:
+        return "missing host"
+    if not parsed.netloc.endswith(".supabase.co"):
+        return "host must end with .supabase.co"
+    if parsed.path not in ("", "/"):
+        return "should not contain a path or trailing slash"
+    return None
 
 if not all([SUPABASE_URL, SUPABASE_KEY, MOLLIE_KEY]):
-    print("⚠️ Missing SUPABASE_URL / SUPABASE_KEY / MOLLIE_KEY in environment → using baked-in local defaults.")
-    print("   Set env vars in Railway to avoid this fallback.")
-    SUPABASE_URL = SUPABASE_URL or "https://privljymqcqgykkwrsfd.supabase.co"
-    SUPABASE_KEY = SUPABASE_KEY or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByaXZsanltcWNxZ3lra3dyc2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxOTc3NjgsImV4cCI6MjA4NDc3Mzc2OH0.M_Mv8Zx-bMfjhGnS5Oh3BEOizyVBeXC6rwXrHoNX-xM"
-    MOLLIE_KEY = MOLLIE_KEY or "test_GQGaRypbVSE5PGQsThJCx68mTbR5gd"
+    raise SystemExit("Missing SUPABASE_URL, SUPABASE_KEY, or MOLLIE_KEY environment variable")
+
+supabase_url_err = _validate_supabase_url(SUPABASE_URL)
+if supabase_url_err:
+    raise SystemExit(f"SUPABASE_URL invalid ({supabase_url_err}): {SUPABASE_URL!r}")
+
+print(f"Using SUPABASE_URL: {SUPABASE_URL!r}")
 
 db = create_client(SUPABASE_URL, SUPABASE_KEY)
 mollie = Client()
